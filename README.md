@@ -1,24 +1,41 @@
-## Flask on docker
+# Twitter Clone Web Application 🐦
 
-### Overview
+[![CI](https://github.com/RuiZhangg/CRUD-web/actions/workflows/test.yml/badge.svg)](https://github.com/RuiZhangg/CRUD-web/actions)
 
-This repository sets up a Dockerized Flask web application with PostgreSQL, Gunicorn, and Nginx for production-ready deployment. The Flask app handles application logic and interacts with a PostgreSQL database for persistent storage. Gunicorn serves as the WSGI application server to handle concurrent requests, while Nginx acts as a reverse proxy to route traffic and serve static files efficiently.
+## Overview
 
-### Usage
+This is a full-stack Twitter clone built with Flask, PostgreSQL, and Docker. It supports user authentication, CRUD functionality, full-text search with RUM indexing, and efficient handling of datasets with 10M+ rows. The project includes automated CI via GitHub Actions and runs in both development and production environments.
 
-Development mode uses the default Flask development server. Create a .env.dev file in the root folder to store environment variables. Then, build the images and run the containers through
+## Features
+
+- User registration, login/logout, and session management
+- Post creation and feed display with pagination
+- Full-text message search with relevance ranking and highlighting
+- High-performance PostgreSQL queries using appropriate indexes
+- Test data generation for large-scale performance testing
+- Dockerized setup with persistent volumes and CI/CD integration
+
+## Usage
+
+### Start in Development
+
+```bash
+# Start the development environment
+$ docker compose up --build
+
+# Access the app at:
+http://localhost:9876
 ```
-$ docker-compose up -d --build
-```
 
-Production mode used Gunicorn and Nginx. Create `.env.prod` and `.env.prod.db` files to store environment variables for production, then it could be run by
-```
-$ docker-compose -f docker-compose.prod.yml up -d --build
-```
+### Start in Production
 
-After building in either mode, access the application at http://localhost:1337 to upload media and retrieve static/media information.
+```bash
+# Start production services in detached mode
+$ docker compose -f docker-compose.prod.yml up -d --build
 
-Following is an example:
-<div style="display: flex; justify-content: center">
-<img src="example.gif" width="50%">
-</div>
+# Start nginx proxy service
+$ docker compose -f docker-compose.prod.yml up nginx
+
+# Access the app at:
+http://localhost:1773
+```

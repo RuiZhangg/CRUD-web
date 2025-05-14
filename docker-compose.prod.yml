@@ -17,8 +17,11 @@ services:
     image: postgres:13
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data/
+      - ./services/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     env_file:
       - ./.env.prod.db
+    ports:
+      - 5917:5432
   nginx:
     build: ./services/nginx
     volumes:

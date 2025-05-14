@@ -1,7 +1,8 @@
 services:
   web:
     build: ./services/web
-    command: python manage.py run -h 0.0.0.0
+    command: python manage.py run -h 0.0.0.0 -p 5000
+    entrypoint: /usr/src/app/entrypoint.sh
     volumes:
       - ./services/web/:/usr/src/app/
     ports:
@@ -14,10 +15,11 @@ services:
     image: postgres:13
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./services/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     environment:
-      - POSTGRES_USER=hello_flask
-      - POSTGRES_PASSWORD=hello_flask
-      - POSTGRES_DB=hello_flask_dev
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=login
+      - POSTGRES_DB=base_db
 
 volumes:
   postgres_data:
