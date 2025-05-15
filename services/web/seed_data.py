@@ -12,10 +12,23 @@ def random_string(length=8):
 
 
 def get_hello_messages():
-    return [
-        "Hello", "Hola", "Bonjour", "Hallo", "Ciao", "Ola", "Privet", "Ni hao", "Konnichiwa", "Annyeonghaseyo",
-        "Salam", "Namaste", "Merhaba", "Hej", "Hei", "Ahoj", "Szervusz", "Szia", "Geia sou", "Shalom"
-    ]
+    return ["Hello", "Hola", "Bonjour", "Hallo", "Ciao", "Ola", "Privet", "Ni hao", "Konnichiwa", "Annyeonghaseyo",
+            "Salam", "Namaste", "Merhaba", "Hej", "Hei", "Ahoj", "Szervusz", "Szia", "Geia sou", "Shalom",
+            "Hello, World!", "Hola, Mundo!", "Bonjour le monde!", "Hallo, Welt!", "Ciao, Mondo!", "Ola, Mundo!",
+            "Privet, mir!", "Ni hao, shijie!", "Konnichiwa, sekai!", "Annyeonghaseyo, segye!",
+            "Salam, donya!", "Namaste, duniya!", "Merhaba Dunya!", "Hej varlden!", "Hei maailma!",
+            "Ahoj svete!", "Hello, Vilag!", "Geia sou Kosme!", "Shalom olam!",
+            "Have a nice day!", "Que tengas un buen dia!", "Bonne journee!", "Einen schonen Tag noch!",
+            "Buona giornata!", "Tenha um bom dia!", "Khoroshego dnya!", "Zhu ni jintian yukuai!",
+            "Yoi ichinichi o!", "Joeun haru doeseyo!", "Rooze khobi dashte bashid!",
+            "Aapka din shubh ho!", "Iyi gunler!", "Ha en bra dag!", "Hyvaa paivaa!",
+            "Hezky den!", "Szep napot!", "Na eheis mia omorfi mera!", "Sheyihiye lecha yom naim!",
+            "I love coding!", "Me encanta programar!", "J'adore coder!", "Ich liebe das Programmieren!",
+            "Amo programmare!", "Adoro codificar!", "Ya lyublyu programmirovat!", "Wo re'ai biancheng!",
+            "Kodingu ga daisuki desu!", "Koding-eul joahaeyo!", "Man ashegh barname-nevisi hastam!",
+            "Mujhe coding pasand hai!", "Kod yazmayi seviyorum!", "Jag alskar att koda!",
+            "Rakastan koodaamista!", "Miluju programovani!", "Szeretek programozni!",
+            "Latrevo ton programmatismo!", "Ani ohev letaknet!"]
 
 
 def generate_unique_usernames(n):

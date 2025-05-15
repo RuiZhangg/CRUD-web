@@ -1,4 +1,5 @@
 import os
+import sqlalchemy
 from flask import Flask, jsonify, send_from_directory, request, render_template, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -55,7 +56,7 @@ def root():
     text = '<strong>' + text + '</strong>' # + 100
     return text
     '''
-    messages = [{}]
+    messages = []
 
     # check if logged in correctly
     username = request.cookies.get('username')
@@ -63,10 +64,33 @@ def root():
     good_credentials = are_credentials_good(username, password)
     print('good_credentials=', good_credentials)
 
+    # present the pages of messages
+    try:
+        page_number = int(request.args.get('page', 1))
+    except (ValueError, TypeError):
+        page_number = 1
+
+    sql = sqlalchemy.sql.text("""
+    SELECT username, message, created_at
+    FROM messages JOIN users USING (user_id)
+    ORDER BY created_at DESC LIMIT 20 OFFSET :offset * 20;
+    """)
+
+    res = db.session.execute(sql, {
+        'offset': page_number - 1
+    })
+
+    for row_messages in res.fetchall():
+        messages.append({
+            'message': row_messages[1],
+            'username': row_messages[0],
+            'created_at': row_messages[2],
+        })
+
     # render_template does preprocessing of the input html file;
     # technically, the input to the render_template function is in a language called jinja2
     # the output of render_template is html
-    return render_template('root.html', logged_in=good_credentials, messages=messages)
+    return render_template('root.html', logged_in=good_credentials, messages=messages, page_number=page_number)
 
 
 def print_debug_info():
@@ -138,6 +162,72 @@ def logout():
     print_debug_info()
     1 + 'error'  # this will throw an error
     return 'logout page'
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+
+    print_debug_info()
+
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    good_credentials = are_credentials_good(username, password)
+
+    if request.form.get('query'):
+        query = request.form.get('query')
+    else:
+        query = request.args.get('query', '')
+
+    try:
+        page_number = int(request.args.get('page', 1))
+    except (ValueError, TypeError):
+        page_number = 1
+
+    messages = []
+    if query:
+        sql = sqlalchemy.sql.text("""
+        SELECT
+            ts_headline('english', m.message, plainto_tsquery('english', :query)) AS highlight_msg,
+            u.username,
+            m.created_at,
+            ts_rank_cd(m.fts_vector, plainto_tsquery('english', :query)) AS rank
+        FROM messages m
+        JOIN users u ON m.user_id = u.user_id
+        WHERE m.fts_vector @@ plainto_tsquery('english', :query)
+        ORDER BY rank DESC, m.created_at DESC
+        LIMIT 20 OFFSET :offset * 20;
+        """)
+
+        res = db.session.execute(sql, {
+            'offset': page_number,
+            'query': ' & '.join(query.split())
+        })
+
+        for row_messages in res.fetchall():
+            messages.append({
+                'message': row_messages[0],
+                'username': row_messages[1],
+                'created_at': row_messages[2],
+            })
+    else:
+        sql = sqlalchemy.sql.text("""
+            SELECT username, message, created_at
+            FROM messages JOIN users USING (user_id)
+            ORDER BY created_at DESC LIMIT 20 OFFSET :offset * 20;
+        """)
+
+        res = db.session.execute(sql, {
+            'offset': page_number - 1
+        })
+
+        for row_messages in res.fetchall():
+            messages.append({
+                'message': row_messages[1],
+                'username': row_messages[0],
+                'created_at': row_messages[2],
+            })
+
+    return render_template('search.html', logged_in=good_credentials, query=query, messages=messages, page_number=page_number)
 
 
 if __name__ == "__main__":
