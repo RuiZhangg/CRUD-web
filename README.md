@@ -1,6 +1,4 @@
-# Twitter Clone Web Application 🐦
-
-[![CI](https://github.com/RuiZhangg/CRUD-web/actions/workflows/test.yml/badge.svg)](https://github.com/RuiZhangg/CRUD-web/actions)
+# Twitter Clone Web Application ![](https://github.com/RuiZhangg/CRUD-web/actions/workflows/test.yml/badge.svg)
 
 ## Overview
 
