@@ -1,6 +1,6 @@
 import os
 import sqlalchemy
-from flask import Flask, jsonify, send_from_directory, request, render_template, make_response
+from flask import Flask, jsonify, send_from_directory, request, render_template, make_response, redirect
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 app = Flask(__name__)
@@ -87,9 +87,6 @@ def root():
             'created_at': row_messages[2],
         })
 
-    # render_template does preprocessing of the input html file;
-    # technically, the input to the render_template function is in a language called jinja2
-    # the output of render_template is html
     return render_template('root.html', logged_in=good_credentials, messages=messages, page_number=page_number)
 
 
@@ -108,19 +105,27 @@ def print_debug_info():
 
 
 def are_credentials_good(username, password):
-    # FIXME:
-    # look inside the databasse and check if the password is correct for the user
-    if username == 'haxor' and password == '1337':
-        return True
-    else:
+    sql = sqlalchemy.sql.text('''
+        SELECT user_id FROM users
+        WHERE username = :username
+        AND password = :password;
+    ''')
+
+    res = db.session.execute(sql, {
+        'username': username,
+        'password': password
+    })
+
+    if res.fetchone() is None:
         return False
+    else:
+        return True
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     print_debug_info()
-    # requests (plural) library for downloading;
-    # now we need request singular
+    
     username = request.form.get('username')
     password = request.form.get('password')
     print('username=', username)
@@ -131,37 +136,119 @@ def login():
 
     # the first time we've visited, no form submission
     if username is None:
-        return render_template('login.html', bad_credentials=False)
+        return render_template('login.html', missing=False, bad_credentials=False, logged_in=good_credentials)
+    elif not username or not password:
+        return render_template('login.html', missing=True, bad_credentials=False, logged_in=good_credentials)
 
-    # they submitted a form; we're on the POST method
     else:
         if not good_credentials:
-            return render_template('login.html', bad_credentials=True)
+            return render_template('login.html', bad_credentials=True, missing=False, logged_in=good_credentials)
         else:
-            # if we get here, then we're logged in
-            # return 'login successful'
             # create a cookie that contains the username/password info
-
-            template = render_template(
-                'login.html',
-                bad_credentials=False,
-                logged_in=True)
-            # return template
-            response = make_response(template)
+            response = make_response(redirect('/'))
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
 
 
-# scheme://hostname/path
-# the @app.route defines the path
-# the hostname and scheme are given to you in the output of the triangle button
-# for settings, the url is http://127.0.0.1:5000/logout to get this route
 @app.route('/logout')
 def logout():
     print_debug_info()
-    1 + 'error'  # this will throw an error
-    return 'logout page'
+    response = make_response(render_template('logout.html'))
+    response.delete_cookie('username')
+    response.delete_cookie('password')
+    return response
+
+
+@app.route('/create_user', methods=['GET', 'POST'])
+def create_user():
+    print_debug_info()
+
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+
+    good_credentials = are_credentials_good(username, password)
+    if good_credentials:
+        return redirect('/')
+
+    new_username = request.form.get('new_username')
+    new_password = request.form.get('new_password')
+    new_password2 = request.form.get('new_password2')
+    new_age = request.form.get('new_age')
+
+    if new_username is None:
+        return render_template('create_user.html')
+    if not new_username:
+        return render_template('create_user.html', missing_username=True)
+    elif not new_password2 or not new_password:
+        return render_template('create_user.html', missing_password=True)
+    elif not new_age.isnumeric():
+        return render_template('create_user.html', invalid_age=True)
+    else:
+        if new_password != new_password2:
+            return render_template('create_user.html', not_matching=True)
+        else:
+            try:
+                sql = sqlalchemy.sql.text('''
+                    INSERT INTO users (username, password, age)
+                    VALUES (:username, :password, :age)
+                    ''')
+
+                db.session.execute(sql, {
+                    'username': new_username,
+                    'password': new_password,
+                    'age': new_age
+                })
+                db.session.commit()
+
+                response = make_response(redirect('/'))
+                response.set_cookie('username', new_username)
+                response.set_cookie('password', new_password)
+                return response
+            except sqlalchemy.exc.IntegrityError:
+                return render_template('create_user.html', already_exists=True)
+
+
+@app.route('/create_message', methods=['GET', 'POST'])
+def create_message():
+    print_debug_info()
+
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+
+    good_credentials = are_credentials_good(username, password)
+    if not good_credentials:
+        return redirect('/')
+
+    sql = sqlalchemy.sql.text('''
+        SELECT user_id FROM users WHERE username = :username
+        ''')
+
+    res = db.session.execute(sql, {
+        'username': username
+    })
+
+    for row in res.fetchall():
+        sender_id = row[0]
+
+    message = request.form.get('message')
+
+    if message is None:
+        return render_template('create_message.html', logged_in=good_credentials)
+    elif not message:
+        return render_template('create_message.html', invalid_message=True, logged_in=good_credentials)
+    else:
+        sql = sqlalchemy.sql.text("""
+        INSERT INTO messages (user_id, message) VALUES (:sender_id, :message);
+        """)
+        db.session.execute(sql, {
+            'sender_id': sender_id,
+            'message': message
+        })
+
+        db.session.commit()
+
+        return render_template('create_message.html', message_sent=True, logged_in=good_credentials)
 
 
 @app.route('/search', methods=['GET', 'POST'])
