@@ -25,8 +25,10 @@ CREATE TABLE transactions (
 );
 
 -- Indexes
-CREATE INDEX idx_users_username ON users(user_id, username);
-CREATE INDEX idx_messages_created_at ON messages(created_at, user_id, message);
+CREATE INDEX idx_users_id_username ON users(user_id, username);
+CREATE INDEX idx_messages_id_ctat_msg ON messages(user_id, created_at, message);
+CREATE INDEX idx_users_username_id ON users(username, user_id);
+CREATE INDEX idx_users_username_pwd_id ON users(username, password, user_id);
 
 CREATE INDEX messages_fts_rum_idx
 ON messages
