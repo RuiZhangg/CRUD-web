@@ -11,6 +11,6 @@ then
     echo "PostgreSQL started"
 fi
 
-python seed_data.py 100
+python seed_data.py 1000000
 
 exec "$@"
